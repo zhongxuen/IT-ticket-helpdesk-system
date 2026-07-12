@@ -17,9 +17,9 @@ export function TicketList() {
     return (
         <div className="space-y-4">
             <div className="flex justify-end">
-                <Button asChild>
-                    <Link href={ROUTES.NEW_TICKET}>New Ticket</Link>
-                </Button>
+                <Link href={ROUTES.NEW_TICKET}>
+                    <Button>New Ticket</Button>
+                </Link>
             </div>
 
             {isLoading && <p className="text-muted-foreground">Loading tickets...</p>}
