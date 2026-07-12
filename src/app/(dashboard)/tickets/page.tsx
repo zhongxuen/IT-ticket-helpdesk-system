@@ -8,7 +8,7 @@ export default function TicketsPage() {
         <div className="space-y-4">
             <div className="flex items-center justify-between">
                 <h1 className="text-2xl font-semibold">Tickets</h1>
-                <Link href={ROUTES.TICKETS_NEW}>
+                <Link href={ROUTES.NEW_TICKET}>
                     <Button>New Ticket</Button>
                 </Link>
             </div>
