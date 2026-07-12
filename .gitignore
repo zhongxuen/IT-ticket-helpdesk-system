@@ -1,4 +1,9 @@
+node_modules
+.next
+.env.local
+.env*.local
 /progress.md
 /compile-progress.ps1
 claude-instructions.md
 claude-master-prompt.md
+supabase-sql.md
