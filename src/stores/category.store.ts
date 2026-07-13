@@ -9,6 +9,7 @@ interface CategoryState {
     error: string | null;
     fetchCategories: () => Promise<void>;
     createCategory: (input: CategoryFormValues) => Promise<void>;
+    updateCategory: (id: string, input: CategoryFormValues) => Promise<void>;
     setCategoryActive: (id: string, isActive: boolean) => Promise<void>;
 }
 
@@ -32,6 +33,11 @@ export const useCategoryStore = create<CategoryState>((set, get) => ({
     createCategory: async (input) => {
         const category = await categoryService.create(input);
         set({ categories: [category, ...get().categories] });
+    },
+
+    updateCategory: async (id, input) => {
+        const updated = await categoryService.update(id, input);
+        set({ categories: get().categories.map((c) => (c.id === id ? updated : c)) });
     },
 
     setCategoryActive: async (id, isActive) => {

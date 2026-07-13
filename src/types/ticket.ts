@@ -29,6 +29,7 @@ export interface TicketHistoryEntry {
     id: string;
     ticketId: string;
     changedBy: string | null;
+    changedByName?: string | null;
     fieldName: string;
     oldValue: string | null;
     newValue: string | null;

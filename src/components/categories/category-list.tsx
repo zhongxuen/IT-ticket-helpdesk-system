@@ -4,8 +4,13 @@ import { useEffect, useState } from "react";
 import { useCategoryStore } from "@/stores/category.store";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import type { TicketCategory } from "@/types/category";
 
-export function CategoryList() {
+interface CategoryListProps {
+    onEdit?: (category: TicketCategory) => void;
+}
+
+export function CategoryList({ onEdit }: CategoryListProps) {
     const { categories, isLoading, error, fetchCategories, setCategoryActive } = useCategoryStore();
     const [pendingId, setPendingId] = useState<string | null>(null);
 
@@ -47,7 +52,10 @@ export function CategoryList() {
                                     {category.isActive ? "Active" : "Inactive"}
                                 </span>
                             </td>
-                            <td className="px-4 py-2 text-right">
+                            <td className="px-4 py-2 text-right space-x-2">
+                                <Button variant="outline" size="sm" onClick={() => onEdit?.(category)}>
+                                    Edit
+                                </Button>
                                 <Button
                                     variant="outline"
                                     size="sm"

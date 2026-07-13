@@ -27,6 +27,7 @@ function mapHistory(row: any): TicketHistoryEntry {
         id: row.id,
         ticketId: row.ticket_id,
         changedBy: row.changed_by,
+        changedByName: row.profiles?.full_name ?? null,
         fieldName: row.field_name,
         oldValue: row.old_value,
         newValue: row.new_value,
@@ -111,10 +112,59 @@ export const ticketService = {
         return mapTicket(data);
     },
 
+    async assign(
+        id: string,
+        input: { assignedItId?: string | null; assignedTechnicianId?: string | null },
+        changedBy: string
+    ): Promise<Ticket> {
+        const current = await this.getById(id);
+        if (!current) throw new Error("Ticket not found");
+
+        const updatePayload: Record<string, unknown> = {};
+        if (input.assignedItId !== undefined) updatePayload.assigned_it_id = input.assignedItId;
+        if (input.assignedTechnicianId !== undefined) updatePayload.assigned_technician_id = input.assignedTechnicianId;
+
+        const { data, error } = await supabase
+            .from("tickets")
+            .update(updatePayload)
+            .eq("id", id)
+            .select("*")
+            .single();
+
+        if (error) throw error;
+
+        const historyEntries: Record<string, unknown>[] = [];
+        if (input.assignedItId !== undefined && input.assignedItId !== current.assignedItId) {
+            historyEntries.push({
+                ticket_id: id,
+                changed_by: changedBy,
+                field_name: "assigned_it_id",
+                old_value: current.assignedItId ?? null,
+                new_value: input.assignedItId,
+            });
+        }
+        if (input.assignedTechnicianId !== undefined && input.assignedTechnicianId !== current.assignedTechnicianId) {
+            historyEntries.push({
+                ticket_id: id,
+                changed_by: changedBy,
+                field_name: "assigned_technician_id",
+                old_value: current.assignedTechnicianId ?? null,
+                new_value: input.assignedTechnicianId,
+            });
+        }
+
+        if (historyEntries.length > 0) {
+            const { error: historyError } = await supabase.from("ticket_history").insert(historyEntries);
+            if (historyError) throw historyError;
+        }
+
+        return mapTicket(data);
+    },
+
     async getHistory(ticketId: string): Promise<TicketHistoryEntry[]> {
         const { data, error } = await supabase
             .from("ticket_history")
-            .select("*")
+            .select("*, profiles:changed_by(full_name)")
             .eq("ticket_id", ticketId)
             .order("created_at", { ascending: false });
 
