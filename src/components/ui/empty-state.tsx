@@ -36,3 +36,17 @@ export function Sidebar({ role }: SidebarProps) {
         </aside>
     );
 }
+
+interface EmptyStateProps {
+    title: string;
+    description?: string;
+}
+
+export function EmptyState({ title, description }: EmptyStateProps) {
+    return (
+        <div className="animate-fade-in flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-muted/30 py-12 text-center">
+            <p className="text-sm font-medium text-foreground">{title}</p>
+            {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
+        </div>
+    );
+}
