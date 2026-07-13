@@ -28,7 +28,7 @@ export function TicketAssign({ ticket, changedBy, onAssigned }: TicketAssignProp
         let active = true;
         setIsLoading(true);
         userService
-            .list()
+            .listAll()
             .then((result) => {
                 if (active) setUsers(result);
             })
@@ -52,10 +52,7 @@ export function TicketAssign({ ticket, changedBy, onAssigned }: TicketAssignProp
         try {
             await ticketService.assign(
                 ticket.id,
-                {
-                    assignedItId: assignedItId || null,
-                    assignedTechnicianId: assignedTechnicianId || null,
-                },
+                { assignedItId: assignedItId || null, assignedTechnicianId: assignedTechnicianId || null },
                 changedBy
             );
             onAssigned(assignedItId || null, assignedTechnicianId || null);
@@ -83,11 +80,7 @@ export function TicketAssign({ ticket, changedBy, onAssigned }: TicketAssignProp
             </div>
             <div className="space-y-2">
                 <Label htmlFor="assignedTechnicianId">Technician</Label>
-                <Select
-                    id="assignedTechnicianId"
-                    value={assignedTechnicianId}
-                    onChange={(e) => setAssignedTechnicianId(e.target.value)}
-                >
+                <Select id="assignedTechnicianId" value={assignedTechnicianId} onChange={(e) => setAssignedTechnicianId(e.target.value)}>
                     <option value="">Unassigned</option>
                     {technicianUsers.map((u) => (
                         <option key={u.id} value={u.id}>

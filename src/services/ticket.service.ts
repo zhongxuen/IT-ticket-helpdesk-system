@@ -1,4 +1,6 @@
 import { supabase } from "@/lib/supabase/client";
+import { emailNotificationService } from "@/services/email-notification.service";
+import { APP_CONFIG } from "@/config/app";
 import type { Ticket, TicketHistoryEntry } from "@/types/ticket";
 import type { TicketStatus } from "@/types/database";
 
@@ -36,22 +38,22 @@ function mapHistory(row: any): TicketHistoryEntry {
 }
 
 export const ticketService = {
-    async list(): Promise<Ticket[]> {
-        const { data, error } = await supabase
+    async list(page = 1): Promise<{ tickets: Ticket[]; total: number }> {
+        const from = (page - 1) * APP_CONFIG.pagination;
+        const to = from + APP_CONFIG.pagination - 1;
+
+        const { data, error, count } = await supabase
             .from("tickets")
-            .select("*")
-            .order("created_at", { ascending: false });
+            .select("*", { count: "exact" })
+            .order("created_at", { ascending: false })
+            .range(from, to);
 
         if (error) throw error;
-        return (data ?? []).map(mapTicket);
+        return { tickets: (data ?? []).map(mapTicket), total: count ?? 0 };
     },
 
     async getById(id: string): Promise<Ticket | null> {
-        const { data, error } = await supabase
-            .from("tickets")
-            .select("*")
-            .eq("id", id)
-            .single();
+        const { data, error } = await supabase.from("tickets").select("*").eq("id", id).single();
 
         if (error) {
             if (error.code === "PGRST116") return null;
@@ -73,7 +75,50 @@ export const ticketService = {
             .single();
 
         if (error) throw error;
-        return mapTicket(data);
+        const created = mapTicket(data);
+
+        emailNotificationService.queue({
+            ticketId: created.id,
+            recipientId: created.employeeId,
+            subject: `Ticket #${created.ticketNumber} created`,
+            body: `Your ticket "${created.title}" has been submitted.`,
+        });
+
+        return created;
+    },
+
+    async reopen(ticketId: string, employeeId: string): Promise<Ticket> {
+        const original = await this.getById(ticketId);
+        if (!original) throw new Error("Ticket not found");
+
+        const { data, error } = await supabase
+            .from("tickets")
+            .insert({
+                title: original.title,
+                description: original.description,
+                employee_id: employeeId,
+                category_id: original.categoryId ?? null,
+                previous_ticket_id: original.id,
+            })
+            .select("*")
+            .single();
+
+        if (error) throw error;
+        const created = mapTicket(data);
+
+        emailNotificationService.queue({
+            ticketId: created.id,
+            recipientId: employeeId,
+            subject: `Ticket #${created.ticketNumber} reopened from #${original.ticketNumber}`,
+        });
+
+        return created;
+    },
+
+    async getPreviousTicket(ticketId: string): Promise<Ticket | null> {
+        const ticket = await this.getById(ticketId);
+        if (!ticket?.previousTicketId) return null;
+        return this.getById(ticket.previousTicketId);
     },
 
     async updateStatus(id: string, newStatus: TicketStatus, changedBy: string): Promise<Ticket> {
@@ -90,12 +135,7 @@ export const ticketService = {
             updatePayload[timestampField[newStatus]] = new Date().toISOString();
         }
 
-        const { data, error } = await supabase
-            .from("tickets")
-            .update(updatePayload)
-            .eq("id", id)
-            .select("*")
-            .single();
+        const { data, error } = await supabase.from("tickets").update(updatePayload).eq("id", id).select("*").single();
 
         if (error) throw error;
 
@@ -109,7 +149,15 @@ export const ticketService = {
 
         if (historyError) throw historyError;
 
-        return mapTicket(data);
+        const updated = mapTicket(data);
+
+        emailNotificationService.queue({
+            ticketId: updated.id,
+            recipientId: updated.employeeId,
+            subject: `Ticket #${updated.ticketNumber} status changed to ${newStatus}`,
+        });
+
+        return updated;
     },
 
     async assign(
@@ -124,12 +172,7 @@ export const ticketService = {
         if (input.assignedItId !== undefined) updatePayload.assigned_it_id = input.assignedItId;
         if (input.assignedTechnicianId !== undefined) updatePayload.assigned_technician_id = input.assignedTechnicianId;
 
-        const { data, error } = await supabase
-            .from("tickets")
-            .update(updatePayload)
-            .eq("id", id)
-            .select("*")
-            .single();
+        const { data, error } = await supabase.from("tickets").update(updatePayload).eq("id", id).select("*").single();
 
         if (error) throw error;
 
@@ -158,7 +201,24 @@ export const ticketService = {
             if (historyError) throw historyError;
         }
 
-        return mapTicket(data);
+        const updated = mapTicket(data);
+
+        if (input.assignedItId && input.assignedItId !== current.assignedItId) {
+            emailNotificationService.queue({
+                ticketId: updated.id,
+                recipientId: input.assignedItId,
+                subject: `Ticket #${updated.ticketNumber} assigned to you`,
+            });
+        }
+        if (input.assignedTechnicianId && input.assignedTechnicianId !== current.assignedTechnicianId) {
+            emailNotificationService.queue({
+                ticketId: updated.id,
+                recipientId: input.assignedTechnicianId,
+                subject: `Ticket #${updated.ticketNumber} assigned to you`,
+            });
+        }
+
+        return updated;
     },
 
     async getHistory(ticketId: string): Promise<TicketHistoryEntry[]> {
@@ -170,5 +230,18 @@ export const ticketService = {
 
         if (error) throw error;
         return (data ?? []).map(mapHistory);
+    },
+
+    async markFirstReviewed(id: string): Promise<Ticket> {
+        const { data, error } = await supabase
+            .from("tickets")
+            .update({ first_reviewed_at: new Date().toISOString() })
+            .eq("id", id)
+            .is("first_reviewed_at", null)
+            .select("*")
+            .single();
+
+        if (error) throw error;
+        return mapTicket(data);
     },
 };

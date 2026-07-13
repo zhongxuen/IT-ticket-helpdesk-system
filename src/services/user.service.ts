@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase/client";
 import type { Profile } from "@/types/profile";
 import type { CreateUserFormValues } from "@/validations/user.schema";
+import { APP_CONFIG } from "@/config/app";
 
 function mapProfile(row: any): Profile {
     return {
@@ -15,21 +16,32 @@ function mapProfile(row: any): Profile {
 }
 
 export const userService = {
-    async list(): Promise<Profile[]> {
-        const { data, error } = await supabase
+    async list(page = 1): Promise<{ users: Profile[]; total: number }> {
+        const from = (page - 1) * APP_CONFIG.pagination;
+        const to = from + APP_CONFIG.pagination - 1;
+
+        const { data, error, count } = await supabase
             .from("profiles")
-            .select("*")
-            .order("created_at", { ascending: false });
+            .select("*", { count: "exact" })
+            .order("created_at", { ascending: false })
+            .range(from, to);
+
+        if (error) throw error;
+        return { users: (data ?? []).map(mapProfile), total: count ?? 0 };
+    },
+
+    async listAll(): Promise<Profile[]> {
+        const { data, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
 
         if (error) throw error;
         return (data ?? []).map(mapProfile);
     },
 
-    async create(input: CreateUserFormValues): Promise<Profile> {
+    async create(input: CreateUserFormValues, actorId: string): Promise<Profile> {
         const res = await fetch("/api/users", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(input),
+            body: JSON.stringify({ ...input, actorId }),
         });
 
         if (!res.ok) {
@@ -40,11 +52,11 @@ export const userService = {
         return mapProfile(await res.json());
     },
 
-    async setActive(id: string, isActive: boolean): Promise<Profile> {
+    async setActive(id: string, isActive: boolean, actorId: string): Promise<Profile> {
         const res = await fetch(`/api/users/${id}`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ isActive }),
+            body: JSON.stringify({ isActive, actorId }),
         });
 
         if (!res.ok) {

@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase/client";
 import type { TicketCategory } from "@/types/category";
 import type { CategoryFormValues } from "@/validations/category.schema";
+import { APP_CONFIG } from "@/config/app";
 
 function mapCategory(row: any): TicketCategory {
     return {
@@ -12,14 +13,18 @@ function mapCategory(row: any): TicketCategory {
 }
 
 export const categoryService = {
-    async list(): Promise<TicketCategory[]> {
-        const { data, error } = await supabase
+    async list(page = 1): Promise<{ categories: TicketCategory[]; total: number }> {
+        const from = (page - 1) * APP_CONFIG.pagination;
+        const to = from + APP_CONFIG.pagination - 1;
+
+        const { data, error, count } = await supabase
             .from("ticket_categories")
-            .select("*")
-            .order("name", { ascending: true });
+            .select("*", { count: "exact" })
+            .order("name", { ascending: true })
+            .range(from, to);
 
         if (error) throw error;
-        return (data ?? []).map(mapCategory);
+        return { categories: (data ?? []).map(mapCategory), total: count ?? 0 };
     },
 
     async listActive(): Promise<TicketCategory[]> {
@@ -36,10 +41,7 @@ export const categoryService = {
     async create(input: CategoryFormValues): Promise<TicketCategory> {
         const { data, error } = await supabase
             .from("ticket_categories")
-            .insert({
-                name: input.name,
-                description: input.description || null,
-            })
+            .insert({ name: input.name, description: input.description || null })
             .select("*")
             .single();
 
@@ -50,10 +52,7 @@ export const categoryService = {
     async update(id: string, input: CategoryFormValues): Promise<TicketCategory> {
         const { data, error } = await supabase
             .from("ticket_categories")
-            .update({
-                name: input.name,
-                description: input.description || null,
-            })
+            .update({ name: input.name, description: input.description || null })
             .eq("id", id)
             .select("*")
             .single();

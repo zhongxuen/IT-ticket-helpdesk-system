@@ -2,26 +2,33 @@ import { create } from "zustand";
 import type { Profile } from "@/types/profile";
 import { userService } from "@/services/user.service";
 import type { CreateUserFormValues } from "@/validations/user.schema";
+import { APP_CONFIG } from "@/config/app";
 
 interface UserState {
     users: Profile[];
     isLoading: boolean;
     error: string | null;
-    fetchUsers: () => Promise<void>;
-    createUser: (input: CreateUserFormValues) => Promise<void>;
-    setUserActive: (id: string, isActive: boolean) => Promise<void>;
+    page: number;
+    pageSize: number;
+    total: number;
+    fetchUsers: (page?: number) => Promise<void>;
+    createUser: (input: CreateUserFormValues, actorId: string) => Promise<void>;
+    setUserActive: (id: string, isActive: boolean, actorId: string) => Promise<void>;
 }
 
 export const useUserStore = create<UserState>((set, get) => ({
     users: [],
     isLoading: false,
     error: null,
+    page: 1,
+    pageSize: APP_CONFIG.pagination,
+    total: 0,
 
-    fetchUsers: async () => {
+    fetchUsers: async (page = get().page) => {
         set({ isLoading: true, error: null });
         try {
-            const users = await userService.list();
-            set({ users });
+            const { users, total } = await userService.list(page);
+            set({ users, total, page });
         } catch (err) {
             set({ error: err instanceof Error ? err.message : "Failed to load users" });
         } finally {
@@ -29,13 +36,13 @@ export const useUserStore = create<UserState>((set, get) => ({
         }
     },
 
-    createUser: async (input) => {
-        const profile = await userService.create(input);
-        set({ users: [profile, ...get().users] });
+    createUser: async (input, actorId) => {
+        await userService.create(input, actorId);
+        await get().fetchUsers(1);
     },
 
-    setUserActive: async (id, isActive) => {
-        const updated = await userService.setActive(id, isActive);
+    setUserActive: async (id, isActive, actorId) => {
+        const updated = await userService.setActive(id, isActive, actorId);
         set({ users: get().users.map((u) => (u.id === id ? updated : u)) });
     },
 }));

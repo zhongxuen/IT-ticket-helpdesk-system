@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase/server";
+import { writeAuditLog } from "@/lib/audit";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
@@ -19,6 +20,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (error) {
         return NextResponse.json({ error: error.message }, { status: 400 });
     }
+
+    await writeAuditLog({
+        userId: typeof body.actorId === "string" ? body.actorId : null,
+        action: body.isActive ? "user.activate" : "user.deactivate",
+        tableName: "profiles",
+        recordId: id,
+    });
 
     return NextResponse.json(data);
 }

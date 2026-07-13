@@ -5,13 +5,14 @@ import Link from "next/link";
 import { useTicketStore } from "@/stores/ticket.store";
 import { TicketStatusBadge } from "@/components/tickets/ticket-status-badge";
 import { Button } from "@/components/ui/button";
+import { Pagination } from "@/components/ui/pagination";
 import { ROUTES } from "@/constants/routes";
 
 export function TicketList() {
-    const { tickets, isLoading, error, fetchTickets } = useTicketStore();
+    const { tickets, isLoading, error, page, pageSize, total, fetchTickets } = useTicketStore();
 
     useEffect(() => {
-        fetchTickets();
+        fetchTickets(1);
     }, [fetchTickets]);
 
     return (
@@ -24,40 +25,41 @@ export function TicketList() {
 
             {isLoading && <p className="text-muted-foreground">Loading tickets...</p>}
             {!isLoading && error && <p className="text-destructive">{error}</p>}
-            {!isLoading && !error && tickets.length === 0 && (
-                <p className="text-muted-foreground">No tickets found.</p>
-            )}
+            {!isLoading && !error && tickets.length === 0 && <p className="text-muted-foreground">No tickets found.</p>}
             {!isLoading && !error && tickets.length > 0 && (
-                <div className="overflow-hidden rounded-lg border border-border">
-                    <table className="w-full text-sm">
-                        <thead className="bg-muted/50 text-left">
-                            <tr>
-                                <th className="px-4 py-2 font-medium">#</th>
-                                <th className="px-4 py-2 font-medium">Title</th>
-                                <th className="px-4 py-2 font-medium">Status</th>
-                                <th className="px-4 py-2 font-medium">Created</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {tickets.map((ticket) => (
-                                <tr key={ticket.id} className="border-t border-border hover:bg-muted/30">
-                                    <td className="px-4 py-2">
-                                        <Link href={`${ROUTES.TICKETS}/${ticket.id}`} className="text-primary hover:underline">
-                                            #{ticket.ticketNumber}
-                                        </Link>
-                                    </td>
-                                    <td className="px-4 py-2">{ticket.title}</td>
-                                    <td className="px-4 py-2">
-                                        <TicketStatusBadge status={ticket.status} />
-                                    </td>
-                                    <td className="px-4 py-2 text-muted-foreground">
-                                        {new Date(ticket.createdAt).toLocaleDateString()}
-                                    </td>
+                <>
+                    <div className="overflow-hidden rounded-lg border border-border">
+                        <table className="w-full text-sm">
+                            <thead className="bg-muted/50 text-left">
+                                <tr>
+                                    <th className="px-4 py-2 font-medium">#</th>
+                                    <th className="px-4 py-2 font-medium">Title</th>
+                                    <th className="px-4 py-2 font-medium">Status</th>
+                                    <th className="px-4 py-2 font-medium">Created</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                            </thead>
+                            <tbody>
+                                {tickets.map((ticket) => (
+                                    <tr key={ticket.id} className="border-t border-border hover:bg-muted/30">
+                                        <td className="px-4 py-2">
+                                            <Link href={`${ROUTES.TICKETS}/${ticket.id}`} className="text-primary hover:underline">
+                                                #{ticket.ticketNumber}
+                                            </Link>
+                                        </td>
+                                        <td className="px-4 py-2">{ticket.title}</td>
+                                        <td className="px-4 py-2">
+                                            <TicketStatusBadge status={ticket.status} />
+                                        </td>
+                                        <td className="px-4 py-2 text-muted-foreground">
+                                            {new Date(ticket.createdAt).toLocaleDateString()}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                    <Pagination page={page} pageSize={pageSize} total={total} onPageChange={fetchTickets} />
+                </>
             )}
         </div>
     );

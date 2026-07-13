@@ -1,14 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ticketService } from "@/services/ticket.service";
 import { useAuthStore } from "@/stores/auth.store";
 import { ROLES } from "@/constants/roles";
+import { ROUTES } from "@/constants/routes";
 import { TicketStatusBadge } from "@/components/tickets/ticket-status-badge";
 import { TicketStatusSelect } from "@/components/tickets/ticket-status-select";
 import { TicketAssign } from "@/components/tickets/ticket-assign";
 import { TicketHistory } from "@/components/tickets/ticket-history";
 import { TicketComments } from "@/components/tickets/ticket-comments";
+import { Button } from "@/components/ui/button";
 import type { Ticket } from "@/types/ticket";
 
 interface TicketDetailProps {
@@ -16,11 +20,19 @@ interface TicketDetailProps {
 }
 
 export function TicketDetail({ id }: TicketDetailProps) {
+    const router = useRouter();
     const profile = useAuthStore((s) => s.profile);
     const [ticket, setTicket] = useState<Ticket | null>(null);
+    const [previousTicket, setPreviousTicket] = useState<Ticket | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [historyKey, setHistoryKey] = useState(0);
+    const [isReopening, setIsReopening] = useState(false);
+    const [reopenError, setReopenError] = useState<string | null>(null);
+
+    const canManage = !!profile && [ROLES.ADMIN, ROLES.IT, ROLES.TECHNICIAN].includes(profile.role as any);
+    const isOwner = !!profile && ticket?.employeeId === profile.id;
+    const canReopen = isOwner && ticket && ["resolved", "closed", "cancelled"].includes(ticket.status);
 
     useEffect(() => {
         let active = true;
@@ -41,7 +53,47 @@ export function TicketDetail({ id }: TicketDetailProps) {
         };
     }, [id]);
 
-    const canManage = !!profile && [ROLES.ADMIN, ROLES.IT, ROLES.TECHNICIAN].includes(profile.role as any);
+    useEffect(() => {
+        if (!ticket?.previousTicketId) {
+            setPreviousTicket(null);
+            return;
+        }
+        let active = true;
+        ticketService.getById(ticket.previousTicketId).then((result) => {
+            if (active) setPreviousTicket(result);
+        });
+        return () => {
+            active = false;
+        };
+    }, [ticket?.previousTicketId]);
+
+    useEffect(() => {
+        if (!canManage || !ticket || ticket.firstReviewedAt) return;
+        let active = true;
+        ticketService
+            .markFirstReviewed(ticket.id)
+            .then((updated) => {
+                if (active) setTicket(updated);
+            })
+            .catch(() => {});
+        return () => {
+            active = false;
+        };
+    }, [canManage, ticket]);
+
+    const handleReopen = async () => {
+        if (!profile || !ticket) return;
+        setIsReopening(true);
+        setReopenError(null);
+        try {
+            const newTicket = await ticketService.reopen(ticket.id, profile.id);
+            router.push(`${ROUTES.TICKETS}/${newTicket.id}`);
+        } catch (err) {
+            setReopenError(err instanceof Error ? err.message : "Failed to reopen ticket");
+        } finally {
+            setIsReopening(false);
+        }
+    };
 
     if (isLoading) return <p className="text-muted-foreground">Loading ticket...</p>;
     if (error) return <p className="text-destructive">{error}</p>;
@@ -53,7 +105,26 @@ export function TicketDetail({ id }: TicketDetailProps) {
                 <h1 className="text-2xl font-semibold">#{ticket.ticketNumber} {ticket.title}</h1>
                 <TicketStatusBadge status={ticket.status} />
             </div>
+
+            {previousTicket && (
+                <p className="text-sm text-muted-foreground">
+                    Reopened from{" "}
+                    <Link href={`${ROUTES.TICKETS}/${previousTicket.id}`} className="text-primary hover:underline">
+                        #{previousTicket.ticketNumber}
+                    </Link>
+                </p>
+            )}
+
             <p className="whitespace-pre-wrap text-sm text-foreground">{ticket.description}</p>
+
+            {canReopen && (
+                <div className="space-y-2">
+                    <Button variant="outline" size="sm" onClick={handleReopen} disabled={isReopening}>
+                        {isReopening ? "Reopening..." : "Reopen Ticket"}
+                    </Button>
+                    {reopenError && <p className="text-sm text-destructive">{reopenError}</p>}
+                </div>
+            )}
 
             {canManage && profile && (
                 <div className="grid gap-4 md:grid-cols-2">

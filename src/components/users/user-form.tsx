@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createUserSchema, type CreateUserFormValues } from "@/validations/user.schema";
 import { useUserStore } from "@/stores/user.store";
+import { useAuthStore } from "@/stores/auth.store";
 import { ROLES } from "@/constants/roles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,7 @@ const ROLE_OPTIONS = [ROLES.ADMIN, ROLES.IT, ROLES.TECHNICIAN, ROLES.EMPLOYEE];
 
 export function UserForm() {
     const createUser = useUserStore((s) => s.createUser);
+    const actorId = useAuthStore((s) => s.profile?.id);
     const [serverError, setServerError] = useState<string | null>(null);
     const [success, setSuccess] = useState(false);
 
@@ -29,10 +31,14 @@ export function UserForm() {
     });
 
     const onSubmit = async (values: CreateUserFormValues) => {
+        if (!actorId) {
+            setServerError("You must be signed in to create a user.");
+            return;
+        }
         setServerError(null);
         setSuccess(false);
         try {
-            await createUser(values);
+            await createUser(values, actorId);
             reset({ fullName: "", email: "", password: "", role: ROLES.EMPLOYEE });
             setSuccess(true);
         } catch (err) {
@@ -79,7 +85,7 @@ export function UserForm() {
                     </div>
                     {serverError && <p className="text-sm text-destructive">{serverError}</p>}
                     {success && <p className="text-sm text-green-700">User created.</p>}
-                    <Button type="submit" className="w-full" disabled={isSubmitting}>
+                    <Button type="submit" className="w-full" disabled={isSubmitting || !actorId}>
                         {isSubmitting ? "Creating..." : "Create user"}
                     </Button>
                 </form>

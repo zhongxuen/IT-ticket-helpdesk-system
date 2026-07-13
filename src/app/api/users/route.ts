@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { supabaseServer } from "@/lib/supabase/server";
 import { createUserSchema } from "@/validations/user.schema";
+import { writeAuditLog } from "@/lib/audit";
 
 export async function POST(request: Request) {
     const body = await request.json();
-    const parsed = createUserSchema.safeParse(body);
+    const { actorId, ...userInput } = body;
+    const parsed = createUserSchema.safeParse(userInput);
 
     if (!parsed.success) {
         return NextResponse.json({ error: parsed.error.issues[0]?.message ?? "Invalid input" }, { status: 400 });
@@ -24,12 +26,7 @@ export async function POST(request: Request) {
 
     const { data: profile, error: profileError } = await supabaseServer
         .from("profiles")
-        .insert({
-            id: created.user.id,
-            full_name: fullName,
-            email,
-            role,
-        })
+        .insert({ id: created.user.id, full_name: fullName, email, role })
         .select("*")
         .single();
 
@@ -37,6 +34,14 @@ export async function POST(request: Request) {
         await supabaseServer.auth.admin.deleteUser(created.user.id);
         return NextResponse.json({ error: profileError.message }, { status: 400 });
     }
+
+    await writeAuditLog({
+        userId: typeof actorId === "string" ? actorId : null,
+        action: "user.create",
+        tableName: "profiles",
+        recordId: created.user.id,
+        metadata: { role },
+    });
 
     return NextResponse.json(profile, { status: 201 });
 }

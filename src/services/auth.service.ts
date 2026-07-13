@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabase/client";
 import type { Profile } from "@/types/profile";
+import { ROUTES } from "@/constants/routes";
 
 export const authService = {
     async signIn(email: string, password: string) {
@@ -13,6 +14,18 @@ export const authService = {
 
     async signOut() {
         const { error } = await supabase.auth.signOut();
+        if (error) throw error;
+    },
+
+    async requestPasswordReset(email: string) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: `${window.location.origin}${ROUTES.RESET_PASSWORD}`,
+        });
+        if (error) throw error;
+    },
+
+    async updatePassword(password: string) {
+        const { error } = await supabase.auth.updateUser({ password });
         if (error) throw error;
     },
 
