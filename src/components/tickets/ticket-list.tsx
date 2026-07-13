@@ -40,7 +40,7 @@ export function TicketList() {
                             </thead>
                             <tbody>
                                 {tickets.map((ticket) => (
-                                    <tr key={ticket.id} className="border-t border-border hover:bg-muted/30">
+                                    <tr key={ticket.id} className="border-t border-border hover:bg-accent/5">
                                         <td className="px-4 py-2">
                                             <Link href={`${ROUTES.TICKETS}/${ticket.id}`} className="text-primary hover:underline">
                                                 #{ticket.ticketNumber}

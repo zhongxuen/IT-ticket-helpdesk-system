@@ -244,4 +244,19 @@ export const ticketService = {
         if (error) throw error;
         return mapTicket(data);
     },
+
+    async getSummary(): Promise<{ open: number; pending: number; resolved: number; cancelled: number }> {
+        const counts = await Promise.all(
+            [["new", "assigned", "in_progress"], ["waiting_employee"], ["resolved", "closed"], ["cancelled"]].map(
+                (statuses) =>
+                    supabase
+                        .from("tickets")
+                        .select("*", { count: "exact", head: true })
+                        .in("status", statuses)
+                        .then(({ count }) => count ?? 0)
+            )
+        );
+        const [open, pending, resolved, cancelled] = counts;
+        return { open, pending, resolved, cancelled };
+    },
 };
