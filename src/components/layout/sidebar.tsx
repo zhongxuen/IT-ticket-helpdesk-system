@@ -16,16 +16,17 @@ export function Sidebar({ role }: SidebarProps) {
     const items = NAV_ITEMS.filter((item) => item.roles.includes(role));
 
     return (
-        <aside className="hidden w-60 shrink-0 border-r border-border bg-muted/30 md:block">
-            <div className="p-4 text-lg font-semibold">{APP_CONFIG.name}</div>
+        <aside className="hidden w-60 shrink-0 border-r border-border bg-muted/40 md:block">
+            <div className="p-4 text-lg font-semibold text-primary">{APP_CONFIG.name}</div>
             <nav className="flex flex-col gap-1 px-2">
-                {items.map((item) => (
+                {items.map((item, i) => (
                     <Link
                         key={item.href}
                         href={item.href}
+                        style={{ animationDelay: `${i * 40}ms` }}
                         className={cn(
-                            "rounded-md px-3 py-2 text-sm font-medium hover:bg-muted",
-                            pathname === item.href && "bg-muted text-primary"
+                            "animate-slide-in rounded-md px-3 py-2 text-sm font-medium text-foreground/80 transition-colors hover:bg-primary/10 hover:text-primary",
+                            pathname === item.href && "bg-primary/10 text-primary font-semibold"
                         )}
                     >
                         {item.label}

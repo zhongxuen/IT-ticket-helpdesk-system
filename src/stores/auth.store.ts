@@ -23,13 +23,18 @@ export const useAuthStore = create<AuthState>((set) => ({
         try {
             const profile = await authService.getCurrentProfile();
             set({ profile, isInitialized: true });
+        } catch {
+            set({ profile: null, isInitialized: true });
         } finally {
             set({ isLoading: false });
         }
     },
 
     signOut: async () => {
-        await authService.signOut();
-        set({ profile: null });
+        try {
+            await authService.signOut();
+        } finally {
+            set({ profile: null, isInitialized: false, isLoading: false });
+        }
     },
 }));
