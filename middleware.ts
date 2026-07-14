@@ -5,6 +5,12 @@ import { ROUTES } from "@/constants/routes";
 const PUBLIC_ROUTES = [ROUTES.LOGIN, ROUTES.FORGOT_PASSWORD, ROUTES.RESET_PASSWORD];
 
 export async function middleware(request: NextRequest) {
+    // Let API routes handle their own auth; don't redirect them to a page.
+    if (request.nextUrl.pathname.startsWith("/api/")) {
+        const { response } = await updateSession(request);
+        return response;
+    }
+
     const { response, user } = await updateSession(request);
 
     const isPublicRoute = PUBLIC_ROUTES.includes(
