@@ -10,6 +10,7 @@ import { ROLES } from "@/constants/roles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select } from "@/components/ui/select";               // <-- import the styled Select
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const ROLE_OPTIONS = [ROLES.ADMIN, ROLES.IT, ROLES.TECHNICIAN, ROLES.EMPLOYEE];
@@ -70,17 +71,17 @@ export function UserForm() {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="role">Role</Label>
-                        <select
+                        <Select
                             id="role"
-                            className="flex h-9 w-full rounded-md border border-border bg-background text-foreground px-3 py-1 text-sm shadow-sm"
+                            className="w-full"               
                             {...register("role")}
                         >
                             {ROLE_OPTIONS.map((role) => (
                                 <option key={role} value={role}>
-                                    {role}
+                                    {role.charAt(0).toUpperCase() + role.slice(1)}  {/* optional: capitalise */}
                                 </option>
                             ))}
-                        </select>
+                        </Select>
                         {errors.role && <p className="text-sm text-destructive">{errors.role.message}</p>}
                     </div>
                     {serverError && <p className="text-sm text-destructive">{serverError}</p>}
