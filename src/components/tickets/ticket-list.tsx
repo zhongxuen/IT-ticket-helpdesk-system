@@ -8,12 +8,17 @@ import { Button } from "@/components/ui/button";
 import { Pagination } from "@/components/ui/pagination";
 import { ROUTES } from "@/constants/routes";
 
-export function TicketList() {
+interface TicketListProps {
+    statusFilter?: string | null;
+}
+
+export function TicketList({ statusFilter = null }: TicketListProps) {
     const { tickets, isLoading, error, page, pageSize, total, fetchTickets } = useTicketStore();
 
     useEffect(() => {
-        fetchTickets(1);
-    }, [fetchTickets]);
+        fetchTickets(1, statusFilter);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [statusFilter]);
 
     return (
         <div className="space-y-4">
@@ -58,7 +63,7 @@ export function TicketList() {
                             </tbody>
                         </table>
                     </div>
-                    <Pagination page={page} pageSize={pageSize} total={total} onPageChange={fetchTickets} />
+                    <Pagination page={page} pageSize={pageSize} total={total} onPageChange={(p) => fetchTickets(p, statusFilter)} />
                 </>
             )}
         </div>

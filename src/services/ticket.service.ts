@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabase/client";
 import { emailNotificationService } from "@/services/email-notification.service";
 import { APP_CONFIG } from "@/config/app";
+import { ROLES } from "@/constants/roles";
 import type { Ticket, TicketHistoryEntry } from "@/types/ticket";
 import type { TicketStatus } from "@/types/database";
 
@@ -16,6 +17,8 @@ function mapTicket(row: any): Ticket {
         assignedTechnicianId: row.assigned_technician_id,
         categoryId: row.category_id,
         previousTicketId: row.previous_ticket_id,
+        resolvedBy: row.resolved_by ?? null,
+        resolvedByName: row.resolver?.full_name ?? null,
         firstReviewedAt: row.first_reviewed_at,
         resolvedAt: row.resolved_at,
         closedAt: row.closed_at,
@@ -37,23 +40,34 @@ function mapHistory(row: any): TicketHistoryEntry {
     };
 }
 
+const OPEN_STATUSES = ["new", "assigned", "in_progress"];
+const RESOLVED_STATUSES = ["resolved", "closed"];
+
 export const ticketService = {
-    async list(page = 1): Promise<{ tickets: Ticket[]; total: number }> {
+    async list(page = 1, statusFilter?: string | null): Promise<{ tickets: Ticket[]; total: number }> {
         const from = (page - 1) * APP_CONFIG.pagination;
         const to = from + APP_CONFIG.pagination - 1;
 
-        const { data, error, count } = await supabase
-            .from("tickets")
-            .select("*", { count: "exact" })
-            .order("created_at", { ascending: false })
-            .range(from, to);
+        let query = supabase.from("tickets").select("*", { count: "exact" });
+
+        if (statusFilter === "open") {
+            query = query.in("status", OPEN_STATUSES);
+        } else if (statusFilter) {
+            query = query.eq("status", statusFilter);
+        }
+
+        const { data, error, count } = await query.order("created_at", { ascending: false }).range(from, to);
 
         if (error) throw error;
         return { tickets: (data ?? []).map(mapTicket), total: count ?? 0 };
     },
 
     async getById(id: string): Promise<Ticket | null> {
-        const { data, error } = await supabase.from("tickets").select("*").eq("id", id).single();
+        const { data, error } = await supabase
+            .from("tickets")
+            .select("*, resolver:resolved_by(full_name)")
+            .eq("id", id)
+            .single();
 
         if (error) {
             if (error.code === "PGRST116") return null;
@@ -71,7 +85,7 @@ export const ticketService = {
                 employee_id: input.employeeId,
                 category_id: input.categoryId ?? null,
             })
-            .select("*")
+            .select("*, resolver:resolved_by(full_name)")
             .single();
 
         if (error) throw error;
@@ -100,7 +114,7 @@ export const ticketService = {
                 category_id: original.categoryId ?? null,
                 previous_ticket_id: original.id,
             })
-            .select("*")
+            .select("*, resolver:resolved_by(full_name)")
             .single();
 
         if (error) throw error;
@@ -134,8 +148,16 @@ export const ticketService = {
         if (timestampField[newStatus]) {
             updatePayload[timestampField[newStatus]] = new Date().toISOString();
         }
+        if (newStatus === "resolved") {
+            updatePayload.resolved_by = changedBy;
+        }
 
-        const { data, error } = await supabase.from("tickets").update(updatePayload).eq("id", id).select("*").single();
+        const { data, error } = await supabase
+            .from("tickets")
+            .update(updatePayload)
+            .eq("id", id)
+            .select("*, resolver:resolved_by(full_name)")
+            .single();
 
         if (error) throw error;
 
@@ -172,7 +194,12 @@ export const ticketService = {
         if (input.assignedItId !== undefined) updatePayload.assigned_it_id = input.assignedItId;
         if (input.assignedTechnicianId !== undefined) updatePayload.assigned_technician_id = input.assignedTechnicianId;
 
-        const { data, error } = await supabase.from("tickets").update(updatePayload).eq("id", id).select("*").single();
+        const { data, error } = await supabase
+            .from("tickets")
+            .update(updatePayload)
+            .eq("id", id)
+            .select("*, resolver:resolved_by(full_name)")
+            .single();
 
         if (error) throw error;
 
@@ -238,22 +265,30 @@ export const ticketService = {
             .update({ first_reviewed_at: new Date().toISOString() })
             .eq("id", id)
             .is("first_reviewed_at", null)
-            .select("*")
+            .select("*, resolver:resolved_by(full_name)")
             .single();
 
         if (error) throw error;
         return mapTicket(data);
     },
 
-    async getSummary(): Promise<{ open: number; pending: number; resolved: number; cancelled: number }> {
+    async getSummary(profile: { id: string; role: string }): Promise<{
+        open: number;
+        pending: number;
+        resolved: number;
+        cancelled: number;
+    }> {
+        const isStaff = [ROLES.ADMIN, ROLES.IT, ROLES.TECHNICIAN].includes(profile.role as any);
+        const baseQuery = () => {
+            const q = supabase.from("tickets").select("*", { count: "exact", head: true });
+            return isStaff ? q : q.eq("employee_id", profile.id);
+        };
+
         const counts = await Promise.all(
-            [["new", "assigned", "in_progress"], ["waiting_employee"], ["resolved", "closed"], ["cancelled"]].map(
-                (statuses) =>
-                    supabase
-                        .from("tickets")
-                        .select("*", { count: "exact", head: true })
-                        .in("status", statuses)
-                        .then(({ count }) => count ?? 0)
+            [OPEN_STATUSES, ["waiting_employee"], RESOLVED_STATUSES, ["cancelled"]].map((statuses) =>
+                baseQuery()
+                    .in("status", statuses)
+                    .then(({ count }) => count ?? 0)
             )
         );
         const [open, pending, resolved, cancelled] = counts;

@@ -148,6 +148,10 @@ export function TicketDetail({ id }: TicketDetailProps) {
                 </div>
             )}
 
+            {ticket.resolvedByName && (
+                <p className="text-sm text-muted-foreground">Resolved by {ticket.resolvedByName}</p>
+            )}
+
             <TicketComments ticketId={ticket.id} />
 
             <div className="space-y-2">
