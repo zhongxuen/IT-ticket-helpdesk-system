@@ -47,10 +47,10 @@ export function CategoryList({ onEdit }: CategoryListProps) {
                     <tbody>
                         {categories.map((category) => (
                             <tr key={category.id} className="border-t border-border transition-colors hover:bg-primary/5">
-                                <td className="px-4 py-2">{category.name}</td>
+                                <td className="px-4 py-2 text-foreground">{category.name}</td>
                                 <td className="px-4 py-2 text-muted-foreground">{category.description ?? "—"}</td>
                                 <td className="px-4 py-2">
-                                    <span className={category.isActive ? "text-green-700" : "text-muted-foreground"}>
+                                    <span className={category.isActive ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}>
                                         {category.isActive ? "Active" : "Inactive"}
                                     </span>
                                 </td>

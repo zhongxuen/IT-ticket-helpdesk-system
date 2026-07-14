@@ -72,7 +72,7 @@ export function UserForm() {
                         <Label htmlFor="role">Role</Label>
                         <select
                             id="role"
-                            className="flex h-9 w-full rounded-md border border-border bg-background px-3 py-1 text-sm shadow-sm"
+                            className="flex h-9 w-full rounded-md border border-border bg-background text-foreground px-3 py-1 text-sm shadow-sm"
                             {...register("role")}
                         >
                             {ROLE_OPTIONS.map((role) => (
@@ -84,7 +84,7 @@ export function UserForm() {
                         {errors.role && <p className="text-sm text-destructive">{errors.role.message}</p>}
                     </div>
                     {serverError && <p className="text-sm text-destructive">{serverError}</p>}
-                    {success && <p className="text-sm text-green-700">User created.</p>}
+                    {success && <p className="text-sm text-green-600 dark:text-green-400">User created.</p>}
                     <Button type="submit" className="w-full" disabled={isSubmitting || !actorId}>
                         {isSubmitting ? "Creating..." : "Create user"}
                     </Button>

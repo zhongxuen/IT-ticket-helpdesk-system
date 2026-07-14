@@ -16,7 +16,7 @@ export function Sidebar({ role }: SidebarProps) {
     const items = NAV_ITEMS.filter((item) => item.roles.includes(role));
 
     return (
-        <aside className="glass hidden w-60 shrink-0 border-r border-border md:block">
+        <aside className="hidden w-60 shrink-0 border-r border-border bg-card md:block">
             <div className="p-4 text-xl font-bold tracking-tight text-primary">{APP_CONFIG.name}</div>
             <nav className="flex flex-col gap-1 px-2">
                 {items.map((item, i) => (

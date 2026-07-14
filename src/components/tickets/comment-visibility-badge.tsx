@@ -2,8 +2,8 @@ import { cn } from "@/lib/utils";
 import type { CommentVisibility } from "@/types/database";
 
 const STYLES: Record<CommentVisibility, string> = {
-    public: "bg-blue-100 text-blue-800",
-    internal: "bg-amber-100 text-amber-800",
+    public: "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200",
+    internal: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200",
 };
 
 const LABELS: Record<CommentVisibility, string> = {

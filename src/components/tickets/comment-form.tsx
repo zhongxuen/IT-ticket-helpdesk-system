@@ -34,7 +34,7 @@ export function CommentForm({ canPostInternal, onSubmit }: CommentFormProps) {
                 <textarea
                     id="comment"
                     rows={3}
-                    className="flex w-full rounded-md border border-border bg-background px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                    className="flex w-full rounded-md border border-border bg-background text-foreground px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     {...register("comment")}
                 />
                 {errors.comment && <p className="text-sm text-destructive">{errors.comment.message}</p>}
@@ -42,11 +42,11 @@ export function CommentForm({ canPostInternal, onSubmit }: CommentFormProps) {
 
             {canPostInternal && (
                 <div className="flex items-center gap-4">
-                    <Label className="flex items-center gap-2 font-normal">
+                    <Label className="flex items-center gap-2 font-normal text-foreground">
                         <input type="radio" value="public" {...register("visibility")} defaultChecked />
                         Public
                     </Label>
-                    <Label className="flex items-center gap-2 font-normal">
+                    <Label className="flex items-center gap-2 font-normal text-foreground">
                         <input type="radio" value="internal" {...register("visibility")} />
                         Internal
                     </Label>

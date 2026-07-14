@@ -45,11 +45,11 @@ export function UserList() {
                     <tbody>
                         {users.map((user) => (
                             <tr key={user.id} className="border-t border-border transition-colors hover:bg-primary/5">
-                                <td className="px-4 py-2">{user.fullName}</td>
+                                <td className="px-4 py-2 text-foreground">{user.fullName}</td>
                                 <td className="px-4 py-2 text-muted-foreground">{user.email}</td>
-                                <td className="px-4 py-2 capitalize">{user.role}</td>
+                                <td className="px-4 py-2 capitalize text-foreground">{user.role}</td>
                                 <td className="px-4 py-2">
-                                    <span className={user.isActive ? "text-green-700" : "text-muted-foreground"}>
+                                    <span className={user.isActive ? "text-green-600 dark:text-green-400" : "text-muted-foreground"}>
                                         {user.isActive ? "Active" : "Inactive"}
                                     </span>
                                 </td>

@@ -26,8 +26,8 @@ export function Navbar({ profile }: NavbarProps) {
     };
 
     return (
-        <header className="glass flex h-14 items-center justify-between border-b border-border px-6">
-            <span className="text-sm font-medium text-muted-foreground">{profile.fullName}</span>
+        <header className="flex h-14 items-center justify-between border-b border-border bg-card px-6">
+            <span className="text-sm font-medium text-foreground">{profile.fullName}</span>
             <div className="flex items-center gap-2">
                 <ThemeToggle />
                 <Button variant="outline" size="sm" onClick={handleSignOut} disabled={isSigningOut}>

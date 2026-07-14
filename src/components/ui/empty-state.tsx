@@ -42,7 +42,7 @@ interface EmptyStateProps {
     description?: string;
 }
 
-export function EmptyState({ title, description }: EmptyStateProps) {
+export function EmptyState({ title, description }: { title: string; description?: string }) {
     return (
         <div className="animate-fade-in flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-muted/30 py-12 text-center">
             <p className="text-sm font-medium text-foreground">{title}</p>
