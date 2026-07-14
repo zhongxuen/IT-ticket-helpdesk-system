@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth.store";
 import { Sidebar } from "@/components/layout/sidebar";
@@ -10,6 +10,7 @@ import { ROUTES } from "@/constants/routes";
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const { profile, isInitialized, isLoading, loadProfile } = useAuthStore();
     const router = useRouter();
+    const [sidebarOpen, setSidebarOpen] = useState(false);
 
     useEffect(() => {
         if (!isInitialized && !isLoading) {
@@ -35,10 +36,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
     return (
         <div className="flex min-h-screen">
-            <Sidebar role={profile.role} />
-            <div className="flex flex-1 flex-col">
-                <Navbar profile={profile} />
-                <main className="flex-1 animate-slide-up p-6">{children}</main>
+            <Sidebar role={profile.role} isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+            <div className="flex min-w-0 flex-1 flex-col">
+                <Navbar profile={profile} onMenuClick={() => setSidebarOpen(true)} />
+                <main className="flex-1 animate-slide-up overflow-x-hidden p-4 sm:p-6">{children}</main>
             </div>
         </div>
     );

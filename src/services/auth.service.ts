@@ -29,6 +29,11 @@ export const authService = {
         if (error) throw error;
     },
 
+    async updateEmail(email: string) {
+        const { error } = await supabase.auth.updateUser({ email });
+        if (error) throw error;
+    },
+
     async getCurrentProfile(): Promise<Profile | null> {
         const {
             data: { user },

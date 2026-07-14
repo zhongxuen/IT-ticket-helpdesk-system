@@ -28,8 +28,8 @@ export function TicketList() {
             {!isLoading && !error && tickets.length === 0 && <p className="text-muted-foreground">No tickets found.</p>}
             {!isLoading && !error && tickets.length > 0 && (
                 <>
-                    <div className="overflow-hidden rounded-xl border border-border shadow-sm">
-                        <table className="w-full text-sm">
+                    <div className="overflow-x-auto rounded-xl border border-border shadow-sm">
+                        <table className="w-full min-w-140 text-sm">
                             <thead className="bg-muted/60 text-left">
                                 <tr>
                                     <th className="px-4 py-3 font-semibold uppercase tracking-wide text-xs text-muted-foreground">#</th>

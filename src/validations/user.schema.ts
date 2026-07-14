@@ -9,3 +9,9 @@ export const createUserSchema = z.object({
 });
 
 export type CreateUserFormValues = z.infer<typeof createUserSchema>;
+
+export const updateUserRoleSchema = z.object({
+    role: z.enum([ROLES.ADMIN, ROLES.IT, ROLES.TECHNICIAN, ROLES.EMPLOYEE]),
+});
+
+export type UpdateUserRoleFormValues = z.infer<typeof updateUserRoleSchema>;

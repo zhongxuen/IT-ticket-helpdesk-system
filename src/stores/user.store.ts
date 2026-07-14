@@ -14,6 +14,8 @@ interface UserState {
     fetchUsers: (page?: number) => Promise<void>;
     createUser: (input: CreateUserFormValues, actorId: string) => Promise<void>;
     setUserActive: (id: string, isActive: boolean, actorId: string) => Promise<void>;
+    updateUserRole: (id: string, role: Profile["role"], actorId: string) => Promise<void>;
+    deleteUser: (id: string, actorId: string) => Promise<void>;
 }
 
 export const useUserStore = create<UserState>((set, get) => ({
@@ -44,5 +46,15 @@ export const useUserStore = create<UserState>((set, get) => ({
     setUserActive: async (id, isActive, actorId) => {
         const updated = await userService.setActive(id, isActive, actorId);
         set({ users: get().users.map((u) => (u.id === id ? updated : u)) });
+    },
+
+    updateUserRole: async (id, role, actorId) => {
+        const updated = await userService.updateRole(id, role, actorId);
+        set({ users: get().users.map((u) => (u.id === id ? updated : u)) });
+    },
+
+    deleteUser: async (id, actorId) => {
+        await userService.delete(id, actorId);
+        set({ users: get().users.filter((u) => u.id !== id) });
     },
 }));

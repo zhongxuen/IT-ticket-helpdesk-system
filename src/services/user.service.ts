@@ -66,4 +66,32 @@ export const userService = {
 
         return mapProfile(await res.json());
     },
+
+    async updateRole(id: string, role: Profile["role"], actorId: string): Promise<Profile> {
+        const res = await fetch(`/api/users/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ role, actorId }),
+        });
+
+        if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            throw new Error(body.error ?? "Failed to update user role");
+        }
+
+        return mapProfile(await res.json());
+    },
+
+    async delete(id: string, actorId: string): Promise<void> {
+        const res = await fetch(`/api/users/${id}`, {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ actorId }),
+        });
+
+        if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            throw new Error(body.error ?? "Failed to delete user");
+        }
+    },
 };
