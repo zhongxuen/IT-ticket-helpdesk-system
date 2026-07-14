@@ -38,7 +38,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Sidebar role={profile.role} />
             <div className="flex flex-1 flex-col">
                 <Navbar profile={profile} />
-                <main className="flex-1 p-6">{children}</main>
+                <main className="flex-1 animate-slide-up p-6">{children}</main>
             </div>
         </div>
     );

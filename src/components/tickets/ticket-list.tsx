@@ -28,19 +28,19 @@ export function TicketList() {
             {!isLoading && !error && tickets.length === 0 && <p className="text-muted-foreground">No tickets found.</p>}
             {!isLoading && !error && tickets.length > 0 && (
                 <>
-                    <div className="overflow-hidden rounded-lg border border-border">
+                    <div className="overflow-hidden rounded-xl border border-border shadow-sm">
                         <table className="w-full text-sm">
-                            <thead className="bg-muted/50 text-left">
+                            <thead className="bg-muted/60 text-left">
                                 <tr>
-                                    <th className="px-4 py-2 font-medium">#</th>
-                                    <th className="px-4 py-2 font-medium">Title</th>
-                                    <th className="px-4 py-2 font-medium">Status</th>
-                                    <th className="px-4 py-2 font-medium">Created</th>
+                                    <th className="px-4 py-3 font-semibold uppercase tracking-wide text-xs text-muted-foreground">#</th>
+                                    <th className="px-4 py-3 font-semibold uppercase tracking-wide text-xs text-muted-foreground">Title</th>
+                                    <th className="px-4 py-3 font-semibold uppercase tracking-wide text-xs text-muted-foreground">Status</th>
+                                    <th className="px-4 py-3 font-semibold uppercase tracking-wide text-xs text-muted-foreground">Created</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {tickets.map((ticket) => (
-                                    <tr key={ticket.id} className="border-t border-border hover:bg-accent/5">
+                                    <tr key={ticket.id} className="border-t border-border transition-colors hover:bg-primary/5">
                                         <td className="px-4 py-2">
                                             <Link href={`${ROUTES.TICKETS}/${ticket.id}`} className="text-primary hover:underline">
                                                 #{ticket.ticketNumber}

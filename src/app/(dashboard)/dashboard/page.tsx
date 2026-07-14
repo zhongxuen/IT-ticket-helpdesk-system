@@ -31,8 +31,10 @@ export default function DashboardPage() {
     }, []);
 
     return (
-        <div className="space-y-6">
-            <h1 className="text-2xl font-semibold text-primary">Dashboard</h1>
+        <div className="animate-slide-up space-y-6">
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                Dashboard
+            </h1>
             {error && <p className="text-sm text-destructive">{error}</p>}
             {!error && (
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

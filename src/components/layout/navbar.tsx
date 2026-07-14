@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useAuthStore } from "@/stores/auth.store";
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import type { Profile } from "@/types/profile";
 import { ROUTES } from "@/constants/routes";
 
@@ -25,11 +26,14 @@ export function Navbar({ profile }: NavbarProps) {
     };
 
     return (
-        <header className="flex h-14 items-center justify-between border-b border-border bg-background/80 px-6 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <header className="glass flex h-14 items-center justify-between border-b border-border px-6">
             <span className="text-sm font-medium text-muted-foreground">{profile.fullName}</span>
-            <Button variant="outline" size="sm" onClick={handleSignOut} disabled={isSigningOut}>
-                {isSigningOut ? "Signing out..." : "Sign out"}
-            </Button>
+            <div className="flex items-center gap-2">
+                <ThemeToggle />
+                <Button variant="outline" size="sm" onClick={handleSignOut} disabled={isSigningOut}>
+                    {isSigningOut ? "Signing out..." : "Sign out"}
+                </Button>
+            </div>
         </header>
     );
 }
