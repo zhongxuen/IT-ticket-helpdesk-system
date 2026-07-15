@@ -5,6 +5,8 @@ import { ROLES } from "@/constants/roles";
 import type { Ticket, TicketHistoryEntry } from "@/types/ticket";
 import type { TicketStatus } from "@/types/database";
 
+const TICKET_SELECT = "*, resolver:profiles!resolved_by(full_name)";
+
 function mapTicket(row: any): Ticket {
     return {
         id: row.id,
@@ -65,7 +67,7 @@ export const ticketService = {
     async getById(id: string): Promise<Ticket | null> {
         const { data, error } = await supabase
             .from("tickets")
-            .select("*, resolver:resolved_by(full_name)")
+            .select(TICKET_SELECT)
             .eq("id", id)
             .single();
 
@@ -85,7 +87,7 @@ export const ticketService = {
                 employee_id: input.employeeId,
                 category_id: input.categoryId ?? null,
             })
-            .select("*, resolver:resolved_by(full_name)")
+            .select(TICKET_SELECT)
             .single();
 
         if (error) throw error;
@@ -114,7 +116,7 @@ export const ticketService = {
                 category_id: original.categoryId ?? null,
                 previous_ticket_id: original.id,
             })
-            .select("*, resolver:resolved_by(full_name)")
+            .select(TICKET_SELECT)
             .single();
 
         if (error) throw error;
@@ -156,7 +158,7 @@ export const ticketService = {
             .from("tickets")
             .update(updatePayload)
             .eq("id", id)
-            .select("*, resolver:resolved_by(full_name)")
+            .select(TICKET_SELECT)
             .single();
 
         if (error) throw error;
@@ -198,7 +200,7 @@ export const ticketService = {
             .from("tickets")
             .update(updatePayload)
             .eq("id", id)
-            .select("*, resolver:resolved_by(full_name)")
+            .select(TICKET_SELECT)
             .single();
 
         if (error) throw error;
@@ -251,7 +253,7 @@ export const ticketService = {
     async getHistory(ticketId: string): Promise<TicketHistoryEntry[]> {
         const { data, error } = await supabase
             .from("ticket_history")
-            .select("*, profiles:changed_by(full_name)")
+            .select("*, profiles:profiles!changed_by(full_name)")
             .eq("ticket_id", ticketId)
             .order("created_at", { ascending: false });
 
@@ -265,7 +267,7 @@ export const ticketService = {
             .update({ first_reviewed_at: new Date().toISOString() })
             .eq("id", id)
             .is("first_reviewed_at", null)
-            .select("*, resolver:resolved_by(full_name)")
+            .select(TICKET_SELECT)
             .single();
 
         if (error) throw error;

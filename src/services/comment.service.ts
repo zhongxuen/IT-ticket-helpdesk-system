@@ -2,6 +2,8 @@ import { supabase } from "@/lib/supabase/client";
 import type { TicketComment } from "@/types/comment";
 import type { CommentVisibility } from "@/types/database";
 
+const COMMENT_SELECT = "*, profiles:profiles!author_id(full_name)";
+
 function mapComment(row: any): TicketComment {
     return {
         id: row.id,
@@ -19,7 +21,7 @@ export const commentService = {
     async listByTicket(ticketId: string): Promise<TicketComment[]> {
         const { data, error } = await supabase
             .from("ticket_comments")
-            .select("*, profiles:author_id(full_name)")
+            .select(COMMENT_SELECT)
             .eq("ticket_id", ticketId)
             .order("created_at", { ascending: true });
 
@@ -41,7 +43,7 @@ export const commentService = {
                 comment: input.comment,
                 visibility: input.visibility,
             })
-            .select("*, profiles:author_id(full_name)")
+            .select(COMMENT_SELECT)
             .single();
 
         if (error) throw error;
