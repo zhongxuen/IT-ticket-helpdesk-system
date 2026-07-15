@@ -46,6 +46,7 @@ ON public.profiles FOR SELECT
 TO authenticated
 USING (true);
 
+DROP POLICY IF EXISTS profiles_update_self ON public.profiles;
 CREATE POLICY profiles_update_self
 ON public.profiles FOR UPDATE
 TO authenticated
